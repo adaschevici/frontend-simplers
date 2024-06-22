@@ -93,7 +93,8 @@ fn main() {
     dioxus_logger::init(Level::INFO,).expect("failed to init logger",);
     launch(App,);
 }
-pub fn App() -> Element {
+
+fn Stories() -> Element {
     rsx! {
         StoryListing {
             story: StoryItem {
@@ -110,4 +111,53 @@ pub fn App() -> Element {
             }
         }
     }
+}
+
+#[derive(Clone, Debug,)]
+enum PreviewState {
+    Unset,
+    Loading,
+    Loaded(StoryPageData,),
+}
+// New
+fn Preview() -> Element {
+    let preview_state = PreviewState::Unset;
+    match preview_state {
+        PreviewState::Unset => rsx! {"Hover over a story to preview it here"},
+        PreviewState::Loading => rsx! {"Loading..."},
+        PreviewState::Loaded(story,) => {
+            rsx! {
+                div { padding: "0.5rem",
+                    div { font_size: "1.5rem", a { href: story.item.url, "{story.item.title}" } }
+                    div { dangerous_inner_html: story.item.text }
+                    for comment in &story.comments {
+                        Comment { comment: comment.clone() }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// NEW
+#[component]
+fn Comment(comment: Comment,) -> Element {
+    rsx! {
+        div { padding: "0.5rem",
+            div { color: "gray", "by {comment.by}" }
+            div { dangerous_inner_html: "{comment.text}" }
+            for kid in &comment.sub_comments {
+                Comment { comment: kid.clone() }
+            }
+        }
+    }
+}
+pub fn App() -> Element {
+    rsx! {
+    div { display: "flex", flex_direction: "row", width: "100%",
+                div { width: "50%", Stories {} }
+                div { width: "50%", Preview {} }
+            }
+
+        }
 }
