@@ -71,9 +71,16 @@ fn StoryListing(story: ReadOnlySignal<StoryItem,>,) -> Element {
 
     rsx! {
         div { padding: "0.5rem", position: "relative",
-            onmouseenter: move |_event| { *preview_state.write() = PreviewState::Loaded(StoryPageData { item: story(), comments: vec![], }) },
+            onmouseenter: move |_event| {
+                info!("Mouse entered...");
+                *preview_state
+                    .write() = PreviewState::Loaded(
+                        StoryPageData { item: story(), comments: vec![], }
+                    );
+            },
             div { font_size: "1.5rem md:1.25rem", color: "gray",
                 a { href: url, onfocus: move |_event| {
+                        info!("Focused...");
                         *preview_state
                             .write() = PreviewState::Loaded(StoryPageData {
                             item: story(),
@@ -129,8 +136,8 @@ enum PreviewState {
 }
 // New
 fn Preview() -> Element {
-    let preview_state = PreviewState::Unset;
-    match preview_state {
+    let preview_state = consume_context::<Signal<PreviewState,>,>();
+    match preview_state() {
         PreviewState::Unset => rsx! {"Hover over a story to preview it here"},
         PreviewState::Loading => rsx! {"Loading..."},
         PreviewState::Loaded(story,) => {
