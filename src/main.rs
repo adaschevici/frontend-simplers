@@ -4,7 +4,7 @@ mod server;
 
 use dioxus::prelude::*;
 // use server::{get_server_data, post_server_data};
-use tracing::Level;
+use tracing::{info, Level};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -56,6 +56,7 @@ pub struct StoryItem {
 
 #[component]
 fn StoryListing(story: ReadOnlySignal<StoryItem,>,) -> Element {
+    let mut preview_state = consume_context::<Signal<PreviewState,>,>();
     let StoryItem { title, url, by, score, time, kids, .. } = &*story.read();
 
     let url = url.as_deref().unwrap_or_default();
@@ -70,8 +71,15 @@ fn StoryListing(story: ReadOnlySignal<StoryItem,>,) -> Element {
 
     rsx! {
         div { padding: "0.5rem", position: "relative",
+            onmouseenter: move |_event| { *preview_state.write() = PreviewState::Loaded(StoryPageData { item: story(), comments: vec![], }) },
             div { font_size: "1.5rem md:1.25rem", color: "gray",
-                a { href: url, "{title}" }
+                a { href: url, onfocus: move |_event| {
+                        *preview_state
+                            .write() = PreviewState::Loaded(StoryPageData {
+                            item: story(),
+                            comments: vec![],
+                        });
+                    }, "{title}" }
                 a {
                     color: "gray",
                     href: "https://news.ycombinator.com/from?site={hostname}",
@@ -153,6 +161,7 @@ fn Comment(comment: Comment,) -> Element {
     }
 }
 pub fn App() -> Element {
+    use_context_provider(|| Signal::new(PreviewState::Unset,),);
     rsx! {
     div { display: "flex", flex_direction: "row", width: "100%",
                 div { width: "50%", Stories {} }
