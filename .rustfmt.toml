@@ -3,5 +3,4 @@ async_block_formatting = "Auto"
 max_width = 100
 use_small_heuristics = "Max"
 newline_style = "Unix"
-trailing_comma = "Always"
 
